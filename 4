@@ -1,0 +1,113 @@
+import gpiozero
+import time
+import I2C_LCD_driver
+
+# Define the pins for the keypad and LCD screen
+col1 = gpiozero.DigitalOutputDevice(17)
+col2 = gpiozero.DigitalOutputDevice(18)
+col3 = gpiozero.DigitalOutputDevice(27)
+col4 = gpiozero.DigitalOutputDevice(22)
+row1 = gpiozero.DigitalInputDevice(25, pull_up=None, active_state=True)
+row2 = gpiozero.DigitalInputDevice(12, pull_up=None, active_state=True)
+row3 = gpiozero.DigitalInputDevice(13, pull_up=None, active_state=True)
+row4 = gpiozero.DigitalInputDevice(19, pull_up=None, active_state=True)
+buzzer = gpiozero.Buzzer(26)
+
+lcd = I2C_LCD_driver.lcd()
+
+# Define the keypad mapping
+keypad_map = [
+    [1, 2, 3, 10],
+    [4, 5, 6, 11],
+    [7, 8, 9, 12],
+    [14, 0, 15, 13]
+]
+
+# Scan the keypad by activating each column in turn and checking which row is pressed
+def scan_keypad():
+    for col_index in range(4):
+        # Activate the current column
+        if col_index == 0:
+            col1.on()
+            col2.off()
+            col3.off()
+            col4.off()
+        elif col_index == 1:
+            col1.off()
+            col2.on()
+            col3.off()
+            col4.off()
+        elif col_index == 2:
+            col1.off()
+            col2.off()
+            col3.on()
+            col4.off()
+        elif col_index == 3:
+            col1.off()
+            col2.off()
+            col3.off()
+            col4.on()
+        
+        # Check if any row is pressed
+        if row1.value:
+            return (col_index, 0)
+        elif row2.value:
+            return (col_index, 1)
+        elif row3.value:
+            return (col_index, 2)
+        elif row4.value:
+            return (col_index, 3)
+    return None
+
+# Wait for a key press and return the key value
+def wait_for_key():
+    while True:
+        key = scan_keypad()
+        if key is not None:
+            return keypad_map[key[1]][key[0]]
+
+# Display a message on the LCD screen
+def display_message(message, line=1):
+    lcd.lcd_display_string(message.ljust(16), line, 0)
+
+# Main loop
+current_time = time.time()
+previous_time = current_time
+interval = 0.01  # Keypad scan interval in seconds
+keypad_number = 20  # Initialize keypad number to an invalid value
+pass_count = 0  # Initialize password count
+pass_timeout = 0
+while True:
+    # Scan the keypad and get the key value
+    key = scan_keypad()
+    if key is not None:
+        key_value = keypad_map[key[1]][key[0]]
+        if key_value == 15:  # Key value 15 is the * key
+            pass_count = 0  # Reset password count
+            keypad_number = 20  # Reset keypad number to an invalid value
+            display_message("Enter password:")
+        elif key_value == 14:  # Key value 14 is the # key
+            if pass_count == 4:  # Valid password
+                display_message("Access granted")
+                pass_count = 0  # Reset password count
+                keypad_number = 20  # Reset keypad number to an invalid value
+            else:  # Invalid password
+                display_message("Access denied")
+                pass_count = 0  # Reset password count
+                keypad_number = 20  # Reset keypad number to an invalid value
+        elif key_value in range(10):  # Key values 0-9 are valid digits
+            if keypad_number == 20:  # This is the first digit entered
+                keypad_number = key_value
+                pass_timeout = time.time() + 5  # Set password timeout
+                display_message("*" * pass_count + str(key_value))
+                pass_count += 1
+            elif time.time() < pass_timeout:  # Within password timeout
+                keypad_number = keypad_number * 10 + key_value
+                pass_timeout = time.time() + 5  # Set password timeout
+                display_message("*" * pass_count + str(keypad_number))
+                pass_count += 1
+            else:  # Password timeout expired
+                pass_count = 0  # Reset password count
+                keypad_number = 20  # Reset keypad number to an invalid value
+                display_message("Timeout")
+    time.sleep(interval)
