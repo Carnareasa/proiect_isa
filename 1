@@ -1,0 +1,89 @@
+from gpiozero import Button
+from time import sleep
+import I2C_LCD_driver
+
+   # Set up the LCD display
+lcd = I2C_LCD_driver.lcd()
+
+# Set up buttons for each key on the keypad
+button1 = Button(17)
+button2 = Button(18)
+button3 = Button(27)
+button4 = Button(22)
+button5 = Button(25)
+button6 = Button(12)
+button7 = Button(13)
+button8 = Button(19)
+button9 = Button(16)
+button10 = Button(20)
+button11 = Button(21)
+button12 = Button(26)
+button13 = Button(30)
+button14 = Button(31)
+button15 = Button(32)
+button16 = Button(33)
+
+# Set up the password
+password = "123456"
+
+# Set up variables to store the entered password and track whether the password is correct
+entered_password = ""
+password_correct = False
+
+# Wait for the user to press a button
+while not password_correct:
+    lcd.lcd_clear()
+    lcd.lcd_display_string("Enter the password:", 1, 0)
+    
+    if button1.is_pressed:
+        entered_password += "1"
+    elif button2.is_pressed:
+        entered_password += "2"
+    elif button3.is_pressed:
+        entered_password += "3"
+    elif button4.is_pressed:
+        entered_password += "A"
+    elif button5.is_pressed:
+        entered_password += "4"
+    elif button6.is_pressed:
+        entered_password += "5"
+    elif button7.is_pressed:
+        entered_password += "6"
+    elif button8.is_pressed:
+        entered_password += "B"
+    elif button9.is_pressed:
+        entered_password += "7"
+    elif button10.is_pressed:
+        entered_password += "8"
+    elif button11.is_pressed:
+        entered_password += "9"
+    elif button12.is_pressed:
+        entered_password += "C"
+    elif button13.is_pressed:
+        # If the entered password is not empty, delete the last character
+        if entered_password:
+            entered_password.pop()
+    elif button14.is_pressed:
+        entered_password += "0"
+    elif button15.is_pressed:
+        entered_password += "#"
+    elif button16.is_pressed:
+        entered_password += "D"
+    sleep(0.1) # add a delay to prevent checking the buttons too frequently
+    
+    # Display the entered password on the first line of the LCD
+    lcd.lcd_display_string(entered_password, 2, 0)
+    
+    # Check if the entered password is correct
+    if entered_password == password:
+        password_correct = True
+    # If the password is incorrect, display an error message on the LCD
+    elif entered_password != password and "#" in entered_password:
+        lcd.lcd_clear()
+        lcd.lcd_display_string("Incorrect password!", 1, 0)
+        lcd.lcd_display_string("Re-enter the password:", 2, 0)
+        entered_password = "" # reset the entered password
+
+# If the password is correct, display a success message on the LCD
+lcd.lcd_clear()
+lcd.lcd_display_string("Correct password!", 1, 0)
