@@ -1,0 +1,114 @@
+import RPi.GPIO as GPIO
+import time
+import smbus
+
+# Set up the I2C LCD
+bus = smbus.SMBus(1)
+I2C_ADDR = 0x27
+
+# Initialize the LCD
+def lcd_init():
+    lcd_write(0x33, 0)
+    lcd_write(0x32, 0)
+    lcd_write(0x06, 0)
+    lcd_write(0x0C, 0)
+    lcd_write(0x28, 0)
+    lcd_write(0x01, 0)
+
+# Function to send data to the LCD
+def lcd_write(bits, mode):
+    # Send data to the LCD
+    bus.write_byte(I2C_ADDR, bits)
+
+# Function to display a message on the LCD
+def lcd_display_string(message, line):
+    # Set the cursor to the specified line
+    lcd_write(0x80 + line, 0)
+
+    message = message.ljust(16, " ")
+
+    for i in range(16):
+        lcd_write(ord(message[i]), 1)
+
+# Set up the rows and columns as inputs and outputs
+GPIO.setmode(GPIO.BCM)
+
+COLUMN_PINS = [6, 13, 19, 26]
+ROW_PINS = [16, 20, 21, 5]
+
+for i in range(COLUMNS):
+    GPIO.setup(COLUMN_PINS[i], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+for i in range(ROWS):
+    GPIO.setup(ROW_PINS[i], GPIO.OUT)
+
+# Keypad mapping
+keys = [
+    ['1', '2', '3', 'A'],
+    ['4', '5', '6', 'B'],
+    ['7', '8', '9', 'C'],
+    ['*', '0', '#', 'D']
+]
+
+# Function to read the keypad
+def read_keypad():
+    # Set all rows to be low
+    for i in range(ROWS):
+        GPIO.output(ROW_PINS[i], 0)
+
+    # Wait for a key press
+    while True:
+        for i in range(COLUMNS):
+            if GPIO.input(COLUMN_PINS[i]) == 0:
+                # Key press detected, determine which key was pressed
+                for j in range(ROWS):
+                    GPIO.output(ROW_PINS[j], 1)
+                    if GPIO.input(COLUMN_PINS[i]) == 0:
+                        # Return the key that was pressed
+                        return keys[j][i]
+                    GPIO.output(ROW_PINS[j], 0)
+
+# Set up the password
+password = "1234"
+
+# Initialize the LCD
+lcd_init()
+
+# Loop until the correct password is entered
+while True:
+    # Display a message on the LCD
+    lcd_display_string("Enter password:", 0)
+
+    # Read the keypad and compare the input to the password
+    input = ""
+    while True:
+        key = read_keypad()
+        if key == "#":
+            # The user has finished entering the password
+            break
+        elif key == "*":
+            # The user wants to clear the input
+            input = ""
+            lcd_display_string("Enter password:", 0)
+        else:
+            # Append the key to the input
+            input += key
+
+            # Display the input on the LCD
+            lcd_display_string(input, 1)
+
+    # Check if the input matches the password
+    if input == password:
+        # The password is correct, display a success message and break out of the loop
+        lcd_display_string("Correct!", 0)
+        lcd_display_string("Access granted", 1)
+        time.sleep(3)
+        break
+    else:
+        # The password is incorrect, display an error message and loop back to the beginning
+		lcd_display_string("Incorrect!", 0)
+        lcd_display_string("Access denied", 1)
+        time.sleep(3)
+
+# Clear the LCD
+lcd_write(0x01, 0)
