@@ -1,0 +1,100 @@
+def scan_keypad():
+    # Set the initial column number to 0
+    col_number = 0
+
+    # Set the key value to 0
+    key_value = 0
+
+    # Scan the keypad columns and rows
+    while col_number < 4:
+        # Set the column number
+        scan_col(col_number)
+
+        # Check if any of the rows are pressed
+        if row1.value == 0:
+            key_value = 1
+        elif row2.value == 0:
+            key_value = 4
+        elif row3.value == 0:
+            key_value = 7
+        elif row4.value == 0:
+            key_value = "*"
+
+        # If a key is pressed, return the key value
+        if key_value != 0:
+            return key_value
+
+        # Increment the column number
+        col_number += 1
+
+    # Reset the column number
+    col_number = 0
+
+    # Scan the keypad columns and rows
+    while col_number < 4:
+        # Set the column number
+        scan_col(col_number)
+
+        # Check if any of the rows are pressed
+        if row1.value == 0:
+            key_value = 2
+        elif row2.value == 0:
+            key_value = 5
+        elif row3.value == 0:
+            key_value = 8
+        elif row4.value == 0:
+            key_value = 0
+
+        # If a key is pressed, return the key value
+        if key_value != 0:
+            return key_value
+
+        # Increment the column number
+        col_number += 1
+
+    # Reset the column number
+    col_number = 0
+
+    # Scan the keypad columns and rows
+    while col_number < 4:
+        # Set the column number
+        scan_col(col_number)
+
+        # Check if any of the rows are pressed
+        if row1.value == 0:
+            key_value = 3
+        elif row2.value == 0:
+            key_value = 6
+        elif row3.value == 0:
+            key_value = 9
+        elif row4.value == 0:
+            key_value = "#"
+
+        # If a key is pressed, return the key value
+        if key_value != 0:
+            return key_value
+
+        # Increment the column number
+        col_number += 1
+
+    # If no key is pressed, return 0
+    return 0
+
+# Set the password
+password = "123456"
+
+# Display a message on the LCD screen
+lcd.lcd_display_string("Please enter ", 1, 0)
+lcd.lcd_display_string("Password:", 2, 0)
+
+while True:
+    # Scan the keypad and get the number of the button pressed
+    key = scan_keypad()
+
+    # If the "*" button is pressed, delete the last character from the password input string
+    if key == "*":
+        if len(pass_input) > 0:
+            pass_input = pass_input[:-1]
+        lcd.lcd_display_string("*" * len(pass_input), 2, 10)
+
+    # If the "#
