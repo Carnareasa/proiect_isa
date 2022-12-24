@@ -1,0 +1,59 @@
+from gpiozero import DigitalInputDevice, DigitalOutputDevice
+from time import sleep
+import I2C_LCD_driver
+
+# Set up the keypad columns and rows as input and output devices
+col1 = DigitalOutputDevice(6)
+col2 = DigitalOutputDevice(13)
+col3 = DigitalOutputDevice(19)
+col4 = DigitalOutputDevice(26)
+row1 = DigitalInputDevice(16)
+row2 = DigitalInputDevice(20)
+row3 = DigitalInputDevice(21)
+row4 = DigitalInputDevice(5)
+
+# Set up the LCD screen
+lcd = I2C_LCD_driver.lcd()
+
+# Function to scan the keypad and return the password input
+def scan_keypad():
+    # Display the password prompt on the LCD screen
+    lcd.lcd_display_string("Enter password:", 1, 0)
+    lcd.lcd_display_string("                ", 2, 0)
+
+    # Initialize an empty password input string
+    pass_input = ""
+
+    # Keep reading input from the LCD screen until the '#' button is pressed
+    while True:
+        # Read the input from the LCD screen
+        key = lcd.lcd_string(2, 0)
+
+        # If the '#' button is pressed, return the password input
+        if '#' in key:
+            return pass_input
+
+        # Otherwise, add the input to the password input string
+        else:
+            pass_input += key
+
+# Set the password
+password = '1234'
+
+while True:
+    # Scan the keypad and get the password input
+    pass_input = scan_keypad()
+
+    # If the password is correct, display a message and break out of the loop
+    if pass_input == password:
+        lcd.lcd_display_string("Correct!", 1, 0)
+        lcd.lcd_display_string("Unlocking...", 2, 0)
+        sleep(2)
+        break
+
+    # If the password is incorrect, display an error message and clear the input
+    else:
+        lcd.lcd_display_string("Incorrect!", 1, 0)
+        lcd.lcd_display_string("Try again.", 2, 0)
+        pass_input = ""
+        sleep(2)
