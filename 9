@@ -1,0 +1,67 @@
+import RPi.GPIO as GPIO
+from Adafruit_CharLCD import Adafruit_CharLCD
+from time import sleep
+
+# Set up the keypad
+GPIO.setmode(GPIO.BCM)
+
+# Set up the LCD
+lcd = Adafruit_CharLCD(rs=26, en=19, d4=13, d5=6, d6=21, d7=20,
+                       cols=16, lines=2)
+
+# Define the password
+password = "1234"
+
+# Set up the rows and columns of the keypad
+rows = [16, 20, 21, 5]
+cols = [6, 13, 19, 26]
+
+# Set up the keys on the keypad
+keys = [
+    ['1', '2', '3', 'A'],
+    ['4', '5', '6', 'B'],
+    ['7', '8', '9', 'C'],
+    ['*', '0', '#', 'D']
+]
+
+# Set up the rows and columns as input and output
+for row in rows:
+    GPIO.setup(row, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+for col in cols:
+    GPIO.setup(col, GPIO.OUT)
+
+# Set up a variable to store the entered password
+entered_password = ""
+
+# Loop until the password is entered correctly
+while entered_password != password:
+    # Display a message on the LCD
+    lcd.clear()
+    lcd.message("Enter password:")
+
+    # Loop through each key on the keypad
+    for col_num in range(len(cols)):
+        # Set the current column as low
+        GPIO.output(cols[col_num], 0)
+
+        # Check the status of each row
+        for row_num in range(len(rows)):
+            if GPIO.input(rows[row_num]) == 0:
+                # A key has been pressed, add it to the entered password
+                entered_password += keys[row_num][col_num]
+                # Display the entered password on the LCD
+                lcd.clear()
+                lcd.message("Password: " + entered_password)
+                # Wait a moment before checking for more key presses
+                sleep(0.5)
+
+        # Set the current column as high
+        GPIO.output(cols[col_num], 1)
+
+    # If the entered password is incorrect, clear it and start over
+    if entered_password != password:
+        entered_password = ""
+
+# The password has been entered correctly, display a message on the LCD
+lcd.clear()
+lcd.message("Correct password!")
