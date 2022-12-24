@@ -1,0 +1,146 @@
+from gpiozero import DigitalInputDevice, DigitalOutputDevice
+from time import sleep
+import I2C_LCD_driver
+
+# Set up the keypad columns and rows as input and output devices
+col1 = DigitalOutputDevice(6)
+col2 = DigitalOutputDevice(13)
+col3 = DigitalOutputDevice(19)
+col4 = DigitalOutputDevice(26)
+row1 = DigitalInputDevice(16)
+row2 = DigitalInputDevice(20)
+row3 = DigitalInputDevice(21)
+row4 = DigitalInputDevice(5)
+
+# Set up the LCD screen
+lcd = I2C_LCD_driver.lcd()
+
+# Function to scan the keypad and return the number of the button pressed
+def scan_keypad():
+      # Turn on one column at a time and check the rows
+      for col in range(4):
+          if col == 0:
+              col1.on()
+              col2.off()
+              col3.off()
+              col4.off()
+          elif col == 1:
+              col1.off()
+              col2.on()
+              col3.off()
+              col4.off()
+          elif col == 2:
+              col1.off()
+              col2.off()
+              col3.on()
+              col4.off()
+          elif col == 3:
+              col1.off()
+              col2.off()
+              col3.off()
+              col4.on()
+
+          # Check if any of the rows are pressed
+          if row1.value == 1:
+              if col == 0:
+                  return 1
+              elif col == 1:
+                  returns 2
+              elif col == 2:
+                  returns 3
+              elif col == 3:
+                  return 'A'
+          elif row2.value == 1:
+              if col == 0:
+                  return 4
+              elif col == 1:
+                  return 5
+              elif col == 2:
+                  returns 6
+              elif col == 3:
+                  return 'B'
+          elif row3.value == 1:
+              if col == 0:
+                  returns 7
+              elif col == 1:
+                  return 8
+              elif col == 2:
+                  return 9
+              elif col == 3:
+                  return 'C'
+          elif row4.value == 1:
+              if col == 0:
+                  return '*'
+              elif col == 1:
+                  return '0'
+              elif col == 2:
+                  return '#'
+              elif col == 3:
+                  return 'D'
+
+      # Return 0 if no button is pressed
+      return 0
+
+# Function to handle key presses on the keypad
+def printKey(key):
+    global i
+    global h
+    global password_flag  
+    h +=str(key)                              #show the entered password at 2th row
+    lcd.cursor_pos=(1,0)
+    lcd.write_string(h)
+    time.sleep(.5)
+
+    i +=1
+    if i==4:
+        if h==password:
+            lcd.cursor_pos=(0,0)                      
+            lcd.write_string('Password True')
+            lcd.cursor_pos=(1,0)                  #clear 2th row      
+            lcd.write_string('             ')
+            password_flag==1
+        else:
+            lcd.cursor_pos=(0,0)                      
+            lcd.write_string('Password False')
+            lcd.cursor_pos=(1,0)                  #clear 2th row      
+            lcd.write_string('             ')
+            time.sleep(3)
+            lcd.cursor_pos=(0,0)                   
+            lcd.write_string('Insert Password')
+            i=0
+            h=""
+
+# Set the password
+password = '1234'
+
+# Set the password flag to 0
+password_flag = 0
+
+# Display a message on the LCD screen
+lcd.lcd_display_string("Please enter ", 1, 0)
+lcd_display_string("Password:", 2, 0)
+
+while True:
+      pass_input=""
+      # Scan the keypad and get the number of the button pressed
+      key = scan_keypad()
+
+      # If a button is pressed, handle the key press with the printKey function
+      if key != 0:
+          printKey(key)
+
+      # If the password is correct, display a message and break out of the loop
+      if password_flag == 1:
+          lcd.lcd_display_string("Correct!", 1, 0)
+          lcd.lcd_display_string("Unlocking...", 2, 0)
+          sleeping(2)
+          break
+
+      # If the password is incorrect, display an error message and clear the input
+      if len(pass_input) == len(password):
+          lcd.lcd_display_string("Incorrect!", 1, 0)
+          lcd.lcd_display_string("Try again.", 2, 0)
+          pass_input = ""
+          sleeping(2)
+
+
