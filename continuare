@@ -1,0 +1,43 @@
+:
+             elif col == 3:
+                 return 'D'
+
+     # Return 0 if no button is pressed
+     return 0
+
+# Set the password
+password = '1234'
+
+# Display a message on the LCD screen
+lcd.lcd_display_string("Please enter ", 1, 0)
+lcd.lcd_display_string("Password:", 2, 0)
+
+while True:
+     pass_input=""
+     # Scan the keypad and get the number of the button pressed
+     key = scan_keypad()
+
+     # delete character
+     if key =="*":
+         if len(pass_input)>0:
+             pass_input =pass_input[:1]
+     elif key =="#":
+         pass_input=""
+         lcd.lcd_display_string(pass_input, 2, 10)
+     # If a button is pressed, add it to the password input string
+     elif key != 0:
+         pass_input += str(key)
+     # Display the password on the LCD screen
+     lcd.lcd_display_string(pass_input, 2, 10)
+     # If the password is correct, display a message and break out of the loop
+     if pass_input == password:
+         lcd.lcd_display_string("Correct!", 1, 0)
+         lcd.lcd_display_string("Unlocking...", 2, 0)
+         sleep(2)
+         break
+
+     # If the password is incorrect, display an error message
+     if len(pass_input) == len(password):
+         lcd.lcd_display_string("Incorrect!", 1, 0)
+         lcd.lcd_display_string("Try again.", 2, 0)
+         sleep(2)
